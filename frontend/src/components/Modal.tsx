@@ -29,11 +29,16 @@ export default function CustomModal(props: CustomModalProps) {
   const [AppProps] = useState(props);
 
   function updateItems(e: React.ChangeEvent<HTMLInputElement>){
-    let { name, value} = e.currentTarget;
-
-    const activeItem = { ...ItemValue, [name]: value };
-
-    setValue(activeItem);
+    let { name, value, } = e.currentTarget;
+    
+    if (e.target.type === "checkbox") {
+      const value = e.currentTarget.checked;
+      const activeItem = { ...ItemValue, [name]: value };
+      setValue(activeItem);
+    }else{
+      var activeItem = { ...ItemValue, [name]: value };
+      setValue(activeItem);
+    }
   }
   
   const { toggle, onSave } = AppProps;
