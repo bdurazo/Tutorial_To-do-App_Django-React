@@ -1,96 +1,130 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import Modal from "./components/Modal";
 import axios from "axios";
+import {
+  Badge
+} from "reactstrap";
 
+interface BadgesColors{
+  lowPriorityColor: string,
+  mediumPriorityColor: string,
+  highPriorityColor: string,
+  urgentPriorityColor: string
+}
 
-
-interface todoItem{
+interface TodoItem{
   id?: number,
   title: string,
   description: string,
   completed: boolean,
+  priority: string,
 }
 
+interface AppProps{ 
+  viewCompletedItems: boolean,
+  isModalActive: boolean,
+}
+
+const modalToggling = (appProps: AppProps) => {
+  const {isModalActive} = appProps
+  return{...appProps, isModalActive: !isModalActive };
+};
+
+const updateTodoItemsList = async (setTodoItemsList: (todoItems: TodoItem[]) => void) => {
+  const { data } = await axios.get("/api/todos/");
+  setTodoItemsList( data );
+};
+
+const handleDelete = async (item: TodoItem, setTodoItemsList: (todoItems: TodoItem[]) => void) => {
+  await axios.delete(`/api/todos/${item.id}/`);
+  updateTodoItemsList( setTodoItemsList );
+};
+
+const createItem = () => ({ title: "", description: "", completed: false, priority: "Low", priorityColor: "secondary" })
+
+const displayCompleted = (status: boolean, appProps: AppProps) => ({...appProps, viewCompletedItems: status});
+
+const asignBadgeColor = (todoItemPriority: string, badgesColors: BadgesColors) => {
+  const {lowPriorityColor, mediumPriorityColor, highPriorityColor, urgentPriorityColor} = badgesColors
+  switch(todoItemPriority){
+    case "Low":
+      console.log(lowPriorityColor)
+      return lowPriorityColor
+    case "Medium":
+      return mediumPriorityColor
+    case "High":
+      return highPriorityColor
+    case "Urgent":
+      return urgentPriorityColor
+    default:
+      return lowPriorityColor
+  }
+}
 
 export default function App(){
-  const baseItem: todoItem = {  
+
+  const badgesColors: BadgesColors = {
+    lowPriorityColor: "success",
+    mediumPriorityColor: "primary",
+    highPriorityColor: "warning",
+    urgentPriorityColor: "danger"
+  }  
+
+  const baseItem: TodoItem = {  
     title: "",
     description: "",
     completed: false,
+    priority: "Low",
   }
+
+  const baseAppProps: AppProps = {
+    viewCompletedItems: false,
+    isModalActive: false,
+  }
+
   const [ActiveItem, setActiveItem] = useState(baseItem)
-  
-  const [ListItems, setList] = useState([])
-
-  const [AppProps, setAppProps] = useState({ viewCompleted: false,
-                                        modal: false,
-                                      })
-
-  function refreshList(){
-    axios
-      .get("/api/todos/")
-      .then((res) => setList(res.data))
-      .catch((err) => console.log(err));
-  };
+  const [ListItems, setList] = useState<TodoItem[]>([])
+  const [appProps, setAppProps] = useState(baseAppProps)
 
   useEffect(() => {
-    refreshList();
-  },[])
+    updateTodoItemsList(setList)
+  },[]);
 
   function toggle(){
-    setAppProps({ viewCompleted: AppProps.viewCompleted, modal: !AppProps.modal });
+    const {viewCompletedItems, isModalActive} = appProps
+    setAppProps({ viewCompletedItems: viewCompletedItems, isModalActive: !isModalActive });
   };
 
-  function handleSubmit(item: todoItem){
-    toggle();
+  async function handleSubmit(item: TodoItem){
+    toggle()
 
     if (item.id) {
-      axios
-        .put(`/api/todos/${item.id}/`, item)
-        .then((res) => refreshList());
+      await axios.put(`/api/todos/${item.id}/`, item)
+    updateTodoItemsList(setList)
       return;
     }
-    axios
-      .post("/api/todos/", item)
-      .then((res) => refreshList());
+    await axios.post("/api/todos/", item)
+    updateTodoItemsList(setList)
   };
 
-  function handleDelete(item: todoItem){
-    axios
-      .delete(`/api/todos/${item.id}/`)
-      .then((res) => refreshList());
-  };
-
-  function createItem(){
-    setActiveItem({ title: "", description: "", completed: false });
-    setAppProps({ viewCompleted: AppProps.viewCompleted, modal: !AppProps.modal });
-  };
-
-  function editItem(item: todoItem){
-    toggle()
-    setActiveItem({id: item.id, title: item.title, description: item.description, completed: item.completed });
-  };
-
-  function displayCompleted(status: boolean){
-    if (status) {
-      return setAppProps({ viewCompleted: true, modal: AppProps.modal })
-
-    }
-    return setAppProps({ viewCompleted: false, modal: AppProps.modal })
-  };
-
-  function renderTabList(){
+  const renderTabList = () => {
     return (
       <div className="nav nav-tabs">
         <span
-          onClick={() => displayCompleted(true)}
-          className={AppProps.viewCompleted ? "nav-link active" : "nav-link"}
+          onClick={() => {
+            setAppProps(displayCompleted(true, appProps))
+            updateTodoItemsList(setList)
+          }}
+          className={appProps.viewCompletedItems ? "nav-link active" : "nav-link"}
         >
           Complete
         </span>
         <span
-          onClick={() => displayCompleted(false)}
-          className={AppProps.viewCompleted ? "nav-link" : "nav-link active"}
+          onClick={() => {
+            setAppProps(displayCompleted(false, appProps))
+            updateTodoItemsList(setList)
+          }}
+          className={appProps.viewCompletedItems ? "nav-link" : "nav-link active"}
         >
           Incomplete
         </span>
@@ -98,35 +132,51 @@ export default function App(){
     );
   };
 
-  function renderItems(){
-    const { viewCompleted } = AppProps;
+  const renderTodoItems = () => {
+    const { viewCompletedItems } = appProps;
     const newItems = ListItems.filter(
-      (item: todoItem) => item.completed === viewCompleted
+      (item: TodoItem) => item.completed === viewCompletedItems
     );
+    
 
-    return newItems.map((item: todoItem) => (
+    return newItems.map((todoItem: TodoItem) => (
       <li
-        key={item.id}
+        key={todoItem.id}
         className="list-group-item d-flex justify-content-between align-items-center"
       >
         <span
           className={`todo-title mr-2 ${
-            AppProps.viewCompleted ? "completed-todo" : ""
+            appProps.viewCompletedItems ? "completed-todo" : ""
           }`}
-          title={item.description}
+          title={todoItem.description}
         >
-          {item.title}
+          {todoItem.title}   
+
+          <br></br>
+          
+          <span>
+              <Badge color={ String( asignBadgeColor(todoItem.priority, badgesColors) )}>
+                {todoItem.priority}
+              </Badge>
+          </span>
         </span>
+
         <span>
           <button
             className="btn btn-secondary mr-2"
-            onClick={() => editItem(item)}
+            onClick={() => {
+              setAppProps(modalToggling(appProps))
+              setActiveItem(todoItem)
+              }
+            }
           >
             Edit
           </button>
           <button
             className="btn btn-danger"
-            onClick={() => handleDelete(item)}
+            onClick={
+              () => handleDelete(todoItem, setList) 
+            }
           >
             Delete
           </button>
@@ -144,26 +194,29 @@ export default function App(){
             <div className="mb-4">
               <button
                 className="btn btn-primary"
-                onClick={createItem}
+                onClick={ () => {
+                    setAppProps(modalToggling(appProps))
+                    setActiveItem(createItem)
+                  }
+                }
               >
                 Add task
               </button>
             </div>
             {renderTabList()}
             <ul className="list-group list-group-flush border-top-0">
-              {renderItems()}
+              {renderTodoItems()}
             </ul>
           </div>
         </div>
       </div>
-      {AppProps.modal ? (
-        <Modal
-          activeItem={ActiveItem}
-          toggle={toggle}
-          onSave={handleSubmit}
-        />
+      {appProps.isModalActive ? ( 
+          <Modal
+            activeItem={ActiveItem}
+            toggle={toggle}
+            onSave={handleSubmit}
+          />
       ) : null}
     </main>
   );
 }
-
