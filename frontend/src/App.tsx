@@ -2,7 +2,16 @@ import React, { useState, useEffect} from 'react';
 import Modal from "./components/Modal";
 import axios from "axios";
 import {
-  Badge
+  Badge,
+  Nav,
+  ButtonToolbar,
+  ButtonGroup,
+  Button,
+  NavItem,
+  UncontrolledButtonDropdown,
+  DropdownToggle,
+  DropdownItem,
+  DropdownMenu
 } from "reactstrap";
 
 interface BadgesColors{
@@ -18,11 +27,13 @@ interface TodoItem{
   description: string,
   completed: boolean,
   priority: string,
+  weekday: string,
 }
 
 interface AppProps{ 
   viewCompletedItems: boolean,
   isModalActive: boolean,
+  dayToView: string,
 }
 
 const modalToggling = (appProps: AppProps) => {
@@ -40,15 +51,16 @@ const handleDelete = async (item: TodoItem, setTodoItemsList: (todoItems: TodoIt
   updateTodoItemsList( setTodoItemsList );
 };
 
-const createItem = () => ({ title: "", description: "", completed: false, priority: "Low", priorityColor: "secondary" })
+const createItem = () => ({ title: "", description: "", completed: false, priority: "Low", priorityColor: "secondary", weekday: "Monday" })
 
 const displayCompleted = (status: boolean, appProps: AppProps) => ({...appProps, viewCompletedItems: status});
+
+const displaySpecificDay = (day: string, appProps: AppProps) => ({...appProps, dayToView: day})
 
 const asignBadgeColor = (todoItemPriority: string, badgesColors: BadgesColors) => {
   const {lowPriorityColor, mediumPriorityColor, highPriorityColor, urgentPriorityColor} = badgesColors
   switch(todoItemPriority){
     case "Low":
-      console.log(lowPriorityColor)
       return lowPriorityColor
     case "Medium":
       return mediumPriorityColor
@@ -75,27 +87,30 @@ export default function App(){
     description: "",
     completed: false,
     priority: "Low",
+    weekday: "Monday",
   }
 
   const baseAppProps: AppProps = {
     viewCompletedItems: false,
     isModalActive: false,
+    dayToView: "Monday",
   }
 
   const [ActiveItem, setActiveItem] = useState(baseItem)
   const [ListItems, setList] = useState<TodoItem[]>([])
   const [appProps, setAppProps] = useState(baseAppProps)
 
+
   useEffect(() => {
     updateTodoItemsList(setList)
   },[]);
 
-  function toggle(){
-    const {viewCompletedItems, isModalActive} = appProps
-    setAppProps({ viewCompletedItems: viewCompletedItems, isModalActive: !isModalActive });
+  const toggle = () => {
+    const {viewCompletedItems, isModalActive, dayToView} = appProps
+    setAppProps({ viewCompletedItems, isModalActive: !isModalActive, dayToView});
   };
 
-  async function handleSubmit(item: TodoItem){
+  const handleSubmit = async (item: TodoItem) => {
     toggle()
 
     if (item.id) {
@@ -109,35 +124,136 @@ export default function App(){
 
   const renderTabList = () => {
     return (
-      <div className="nav nav-tabs">
-        <span
-          onClick={() => {
-            setAppProps(displayCompleted(true, appProps))
-            updateTodoItemsList(setList)
-          }}
-          className={appProps.viewCompletedItems ? "nav-link active" : "nav-link"}
-        >
-          Complete
-        </span>
-        <span
-          onClick={() => {
-            setAppProps(displayCompleted(false, appProps))
-            updateTodoItemsList(setList)
-          }}
-          className={appProps.viewCompletedItems ? "nav-link" : "nav-link active"}
-        >
-          Incomplete
-        </span>
+      <div>
+          <Nav tabs>
+              <NavItem
+                  onClick={() => {
+                    setAppProps(displaySpecificDay("Monday", appProps))
+                    updateTodoItemsList(setList)
+                  }}
+                  className={appProps.dayToView === "Monday" ? "nav-link active" : "nav-link"}
+                >
+                  Monday
+              </NavItem>
+              <NavItem
+                  onClick={() => {
+                    setAppProps(displaySpecificDay("Tuesday", appProps))
+                    updateTodoItemsList(setList)
+                  }}
+                  className={appProps.dayToView === "Tuesday" ? "nav-link active" : "nav-link"}
+                >
+                  Tuesday
+              </NavItem>
+              <NavItem
+                  onClick={() => {
+                    setAppProps(displaySpecificDay("Wednesday", appProps))
+                    updateTodoItemsList(setList)
+                  }}
+                  className={appProps.dayToView === "Wednesday" ? "nav-link active" : "nav-link"}
+                >
+                  Wednesday
+              </NavItem>
+              <NavItem
+                  onClick={() => {
+                    setAppProps(displaySpecificDay("Thursday", appProps))
+                    updateTodoItemsList(setList)
+                  }}
+                  className={appProps.dayToView === "Thursday" ? "nav-link active" : "nav-link"}
+                >
+                  Thursday
+              </NavItem>
+              <NavItem
+                  onClick={() => {
+                    setAppProps(displaySpecificDay("Friday", appProps))
+                    updateTodoItemsList(setList)
+                  }}
+                  className={appProps.dayToView === "Friday" ? "nav-link active" : "nav-link"}
+                >
+                  Friday
+              </NavItem>
+              <NavItem
+                  onClick={() => {
+                    setAppProps(displaySpecificDay("Saturday", appProps))
+                    updateTodoItemsList(setList)
+                  }}
+                  className={appProps.dayToView === "Saturday" ? "nav-link active" : "nav-link"}
+                >
+                  Saturday
+              </NavItem>
+              <NavItem
+                  onClick={() => {
+                    setAppProps(displaySpecificDay("Sunday", appProps))
+                    updateTodoItemsList(setList)
+                  }}
+                  className={appProps.dayToView === "Sunday" ? "nav-link active" : "nav-link"}
+                >
+                  Sunday
+              </NavItem>
+          </Nav>
+
+          <br></br>
+
+          <ButtonToolbar>
+            <ButtonGroup  
+              size="sm"
+            >
+              <Button
+                outline color="success"
+                active={appProps.viewCompletedItems}
+                onClick={() => {
+                  setAppProps(displayCompleted(true, appProps))
+                  updateTodoItemsList(setList)
+                  
+                }}
+              >
+                Completed
+              </Button>
+              <Button
+                outline color="danger"
+                active={!appProps.viewCompletedItems}
+                onClick={() => {
+                  setAppProps(displayCompleted(false, appProps))
+                  updateTodoItemsList(setList)
+                }}
+              >
+                Incompleted
+              </Button>
+            </ButtonGroup>
+            
+            <ButtonGroup size="sm">
+                <UncontrolledButtonDropdown >
+                  
+                  <DropdownToggle caret>
+                    Sort
+                  </DropdownToggle>
+
+                  <DropdownMenu>
+
+                    <DropdownItem >
+                      Alphabetically
+                    </DropdownItem>
+
+                    <DropdownItem divider />
+
+                    <DropdownItem>
+                      By priority
+                    </DropdownItem>
+
+                  </DropdownMenu>
+              </UncontrolledButtonDropdown>
+            </ButtonGroup>
+          </ButtonToolbar>
       </div>
     );
   };
 
   const renderTodoItems = () => {
-    const { viewCompletedItems } = appProps;
+    const { viewCompletedItems, dayToView } = appProps;
     const newItems = ListItems.filter(
-      (item: TodoItem) => item.completed === viewCompletedItems
+      (item: TodoItem) => {
+        return (item.completed === viewCompletedItems && item.weekday === dayToView)
+      }
     );
-    
 
     return newItems.map((todoItem: TodoItem) => (
       <li
@@ -189,7 +305,7 @@ export default function App(){
     <main className="container">
       <h1 className="text-white text-uppercase text-center my-4">Todo app</h1>
       <div className="row">
-        <div className="col-md-6 col-sm-10 mx-auto p-0">
+        <div className="col-md-8 col-sm-10 mx-auto p-0">
           <div className="card p-3">
             <div className="mb-4">
               <button
@@ -204,6 +320,7 @@ export default function App(){
               </button>
             </div>
             {renderTabList()}
+
             <ul className="list-group list-group-flush border-top-0">
               {renderTodoItems()}
             </ul>

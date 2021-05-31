@@ -17,6 +17,7 @@ interface TodoItem{
   description: string,
   completed: boolean,
   priority: string,
+  weekday: string,
 }
 
 interface CustomModalProps{
@@ -32,6 +33,8 @@ const updateTitle = (title: string, todo: TodoItem) => ({...todo, title})
 const updateDescription = (description: string, todo: TodoItem) => ({...todo, description})
 
 const updatePriorityLvl = (priority: string, todo: TodoItem) => ({...todo, priority})
+
+const updateWeekday = (weekday: string, todo: TodoItem) => ({...todo, weekday})
 
 export default function CustomModal(props: CustomModalProps) {
   const {toggle, onSave, activeItem} = props
@@ -94,6 +97,30 @@ export default function CustomModal(props: CustomModalProps) {
               <option>High</option>
               <option>Urgent</option>
             </Input>
+          </FormGroup>
+
+          <FormGroup>
+            <Label for="todo-weekday">Select the day of the week</Label>
+            <Input 
+              type="select" 
+              id="todo-weekday"
+              name="weekday" 
+              value= {todo.weekday}
+              onChange={ (event) => {
+                const {target: {value}} = event
+
+                const updatedTodo = updateWeekday(value, todo)
+                setTodoValues(updatedTodo)
+              }}
+              >
+                <option>Monday</option>
+                <option>Tuesday</option>
+                <option>Wednesday</option>
+                <option>Thursday</option>
+                <option>Friday</option>
+                <option>Saturday</option>
+                <option>Sunday</option>            
+              </Input>
           </FormGroup>
 
           <FormGroup check>
