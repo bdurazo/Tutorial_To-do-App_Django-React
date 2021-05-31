@@ -34,6 +34,7 @@ interface AppProps{
   viewCompletedItems: boolean,
   isModalActive: boolean,
   dayToView: string,
+  sortingOption: string
 }
 
 const modalToggling = (appProps: AppProps) => {
@@ -53,7 +54,9 @@ const handleDelete = async (item: TodoItem, setTodoItemsList: (todoItems: TodoIt
 
 const createItem = () => ({ title: "", description: "", completed: false, priority: "Low", priorityColor: "secondary", weekday: "Monday" })
 
-const displayCompleted = (status: boolean, appProps: AppProps) => ({...appProps, viewCompletedItems: status});
+const updateDisplayCompletedOption = (status: boolean, appProps: AppProps) => ({...appProps, viewCompletedItems: status});
+
+const updateSortingOption = (status: string, appProps: AppProps) => ({...appProps, sortingOption: status});
 
 const displaySpecificDay = (day: string, appProps: AppProps) => ({...appProps, dayToView: day})
 
@@ -71,6 +74,21 @@ const asignBadgeColor = (todoItemPriority: string, badgesColors: BadgesColors) =
     default:
       return lowPriorityColor
   }
+}
+
+const asignPriorityValue = (priority: string) => {
+    switch(priority){
+      case "Low":
+        return 4
+      case "Medium":
+        return 3
+      case "High":
+        return 2
+      case "Urgent":
+        return 1
+      default:
+        return 4
+    }
 }
 
 export default function App(){
@@ -94,6 +112,7 @@ export default function App(){
     viewCompletedItems: false,
     isModalActive: false,
     dayToView: "Monday",
+    sortingOption: "Alphabetical"
   }
 
   const [ActiveItem, setActiveItem] = useState(baseItem)
@@ -106,8 +125,8 @@ export default function App(){
   },[]);
 
   const toggle = () => {
-    const {viewCompletedItems, isModalActive, dayToView} = appProps
-    setAppProps({ viewCompletedItems, isModalActive: !isModalActive, dayToView});
+    const {viewCompletedItems, isModalActive, dayToView, sortingOption: sortingStyle} = appProps
+    setAppProps({ viewCompletedItems, isModalActive: !isModalActive, dayToView, sortingOption: sortingStyle});
   };
 
   const handleSubmit = async (item: TodoItem) => {
@@ -201,7 +220,7 @@ export default function App(){
                 outline color="success"
                 active={appProps.viewCompletedItems}
                 onClick={() => {
-                  setAppProps(displayCompleted(true, appProps))
+                  setAppProps(updateDisplayCompletedOption(true, appProps))
                   updateTodoItemsList(setList)
                   
                 }}
@@ -212,7 +231,7 @@ export default function App(){
                 outline color="danger"
                 active={!appProps.viewCompletedItems}
                 onClick={() => {
-                  setAppProps(displayCompleted(false, appProps))
+                  setAppProps(updateDisplayCompletedOption(false, appProps))
                   updateTodoItemsList(setList)
                 }}
               >
@@ -229,13 +248,23 @@ export default function App(){
 
                   <DropdownMenu>
 
-                    <DropdownItem >
+                    <DropdownItem onClick={() => {
+                          setAppProps(updateSortingOption("Alphabetically", appProps))
+                          updateTodoItemsList(setList)
+                        }
+                      }
+                    >
                       Alphabetically
                     </DropdownItem>
 
                     <DropdownItem divider />
 
-                    <DropdownItem>
+                    <DropdownItem onClick={() => {
+                          setAppProps(updateSortingOption("By priority", appProps))
+                          updateTodoItemsList(setList)
+                        }
+                      }
+                    >
                       By priority
                     </DropdownItem>
 
@@ -248,12 +277,18 @@ export default function App(){
   };
 
   const renderTodoItems = () => {
-    const { viewCompletedItems, dayToView } = appProps;
+    const { viewCompletedItems, dayToView, sortingOption } = appProps;
+
     const newItems = ListItems.filter(
       (item: TodoItem) => {
         return (item.completed === viewCompletedItems && item.weekday === dayToView)
       }
     );
+    
+    if( sortingOption === "Alphabetically" )
+      newItems.sort( (firstTodoItem, secondTodoItem) => firstTodoItem.title.toLowerCase().localeCompare(secondTodoItem.title.toLowerCase()))
+    else if (sortingOption === "By priority") 
+      newItems.sort( (firstTodoItem, secondTodoItem) => asignPriorityValue(firstTodoItem.priority) - asignPriorityValue(secondTodoItem.priority))
 
     return newItems.map((todoItem: TodoItem) => (
       <li
