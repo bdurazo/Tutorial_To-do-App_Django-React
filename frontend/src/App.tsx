@@ -4,7 +4,6 @@ import axios from "axios";
 import {
   Badge,
   Nav,
-  ButtonToolbar,
   ButtonGroup,
   Button,
   NavItem,
@@ -115,8 +114,8 @@ export default function App(){
     sortingOption: "Alphabetical"
   }
 
-  const [ActiveItem, setActiveItem] = useState(baseItem)
-  const [ListItems, setList] = useState<TodoItem[]>([])
+  const [activeItem, setActiveItem] = useState(baseItem)
+  const [todoItemsList, setList] = useState<TodoItem[]>([])
   const [appProps, setAppProps] = useState(baseAppProps)
 
 
@@ -129,15 +128,15 @@ export default function App(){
     setAppProps({ viewCompletedItems, isModalActive: !isModalActive, dayToView, sortingOption: sortingStyle});
   };
 
-  const handleSubmit = async (item: TodoItem) => {
+  const handleSubmit = async (todoItem: TodoItem) => {
     toggle()
 
-    if (item.id) {
-      await axios.put(`/api/todos/${item.id}/`, item)
+    if (todoItem.id) {
+      await axios.put(`/api/todos/${todoItem.id}/`, todoItem)
     updateTodoItemsList(setList)
       return;
     }
-    await axios.post("/api/todos/", item)
+    await axios.post("/api/todos/", todoItem)
     updateTodoItemsList(setList)
   };
 
@@ -211,38 +210,36 @@ export default function App(){
           </Nav>
 
           <br></br>
-
-          <ButtonToolbar>
-            <ButtonGroup  
-              size="sm"
+          
+          <ButtonGroup  
+            size="sm"
+          >
+            <Button
+              outline color="success"
+              active={appProps.viewCompletedItems}
+              onClick={() => {
+                setAppProps(updateDisplayCompletedOption(true, appProps))
+                updateTodoItemsList(setList)
+                
+              }}
             >
-              <Button
-                outline color="success"
-                active={appProps.viewCompletedItems}
-                onClick={() => {
-                  setAppProps(updateDisplayCompletedOption(true, appProps))
-                  updateTodoItemsList(setList)
-                  
-                }}
-              >
-                Completed
-              </Button>
-              <Button
-                outline color="danger"
-                active={!appProps.viewCompletedItems}
-                onClick={() => {
-                  setAppProps(updateDisplayCompletedOption(false, appProps))
-                  updateTodoItemsList(setList)
-                }}
-              >
-                Incompleted
-              </Button>
-            </ButtonGroup>
-            
-            <ButtonGroup size="sm">
-                <UncontrolledButtonDropdown >
-                  
-                  <DropdownToggle caret>
+              Completed
+            </Button>
+
+            <Button
+              outline color="danger"
+              active={!appProps.viewCompletedItems}
+              onClick={() => {
+                setAppProps(updateDisplayCompletedOption(false, appProps))
+                updateTodoItemsList(setList)
+              }}
+            >
+              Incompleted
+            </Button>
+          </ButtonGroup>
+
+          <UncontrolledButtonDropdown className="float-right" size="sm">
+                  <DropdownToggle  caret>
                     Sort
                   </DropdownToggle>
 
@@ -269,9 +266,8 @@ export default function App(){
                     </DropdownItem>
 
                   </DropdownMenu>
-              </UncontrolledButtonDropdown>
-            </ButtonGroup>
-          </ButtonToolbar>
+            </UncontrolledButtonDropdown>
+          
       </div>
     );
   };
@@ -279,7 +275,7 @@ export default function App(){
   const renderTodoItems = () => {
     const { viewCompletedItems, dayToView, sortingOption } = appProps;
 
-    const newItems = ListItems.filter(
+    const newItems = todoItemsList.filter(
       (item: TodoItem) => {
         return (item.completed === viewCompletedItems && item.weekday === dayToView)
       }
@@ -364,7 +360,7 @@ export default function App(){
       </div>
       {appProps.isModalActive ? ( 
           <Modal
-            activeItem={ActiveItem}
+            activeItem={activeItem}
             toggle={toggle}
             onSave={handleSubmit}
           />
