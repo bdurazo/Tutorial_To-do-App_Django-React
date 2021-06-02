@@ -1,17 +1,20 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect} from "react";
 import Modal from "./components/Modal";
 import axios from "axios";
 import {
-  Badge,
-  Nav,
-  ButtonGroup,
-  Button,
-  NavItem,
-  UncontrolledButtonDropdown,
-  DropdownToggle,
-  DropdownItem,
-  DropdownMenu
+	Badge,
+	Nav,
+	ButtonGroup,
+	Button,
+	NavItem,
+	UncontrolledButtonDropdown,
+	DropdownToggle,
+	DropdownItem,
+	DropdownMenu
 } from "reactstrap";
+
+axios.defaults.xsrfCookieName = "csrftoken";
+axios.defaults.xsrfHeaderName = "X-CSRFToken";
 
 interface BadgesColors{
   lowPriorityColor: string,
@@ -25,7 +28,7 @@ interface TodoItem{
   title: string,
   description: string,
   completed: boolean,
-  priority: string,
+  priority: number,
   weekday: string,
 }
 
@@ -37,334 +40,315 @@ interface AppProps{
 }
 
 const modalToggling = (appProps: AppProps) => {
-  const {isModalActive} = appProps
-  return{...appProps, isModalActive: !isModalActive };
+	const {isModalActive} = appProps;
+	return{...appProps, isModalActive: !isModalActive };
 };
 
-const updateTodoItemsList = async (setTodoItemsList: (todoItems: TodoItem[]) => void) => {
-  const { data } = await axios.get("/api/todos/");
-  setTodoItemsList( data );
+const updateTodoItemsList = async (appProps: AppProps, setTodoItemsList: (todoItems: TodoItem[]) => void) => {
+	const {viewCompletedItems, dayToView, sortingOption} = appProps;
+	const { data } = await axios.get(`/api/todos/?completed=${ viewCompletedItems }&ordering=${ sortingOption }&weekday=${ dayToView }`);
+
+	setTodoItemsList( data );
 };
 
-const handleDelete = async (item: TodoItem, setTodoItemsList: (todoItems: TodoItem[]) => void) => {
-  await axios.delete(`/api/todos/${item.id}/`);
-  updateTodoItemsList( setTodoItemsList );
+const handleDelete = async (item: TodoItem, appProps: AppProps, setTodoItemsList: (todoItems: TodoItem[]) => void) => {
+	const { id } = item;
+	await axios.delete(`/api/todos/${id}/`);
+	updateTodoItemsList( appProps,  setTodoItemsList );
 };
 
-const createItem = () => ({ title: "", description: "", completed: false, priority: "Low", priorityColor: "secondary", weekday: "Monday" })
+const createItem = () => ({ title: "", description: "", completed: false, priority: 4, priorityColor: "secondary", weekday: "Monday" });
 
 const updateDisplayCompletedOption = (status: boolean, appProps: AppProps) => ({...appProps, viewCompletedItems: status});
 
 const updateSortingOption = (status: string, appProps: AppProps) => ({...appProps, sortingOption: status});
 
-const displaySpecificDay = (day: string, appProps: AppProps) => ({...appProps, dayToView: day})
+const displaySpecificDay = (day: string, appProps: AppProps) => ({...appProps, dayToView: day});
 
-const asignBadgeColor = (todoItemPriority: string, badgesColors: BadgesColors) => {
-  const {lowPriorityColor, mediumPriorityColor, highPriorityColor, urgentPriorityColor} = badgesColors
-  switch(todoItemPriority){
-    case "Low":
-      return lowPriorityColor
-    case "Medium":
-      return mediumPriorityColor
-    case "High":
-      return highPriorityColor
-    case "Urgent":
-      return urgentPriorityColor
-    default:
-      return lowPriorityColor
-  }
-}
+const asignBadgeColor = (todoItemPriority: number, badgesColors: BadgesColors) => {
+	const {lowPriorityColor, mediumPriorityColor, highPriorityColor, urgentPriorityColor} = badgesColors;
+	switch(todoItemPriority){
+	case 4:
+		return lowPriorityColor;
+	case 3:
+		return mediumPriorityColor;
+	case 2:
+		return highPriorityColor;
+	case 1:
+		return urgentPriorityColor;
+	default:
+		return lowPriorityColor;
+	}
+};
 
-const asignPriorityValue = (priority: string) => {
-    switch(priority){
-      case "Low":
-        return 4
-      case "Medium":
-        return 3
-      case "High":
-        return 2
-      case "Urgent":
-        return 1
-      default:
-        return 4
-    }
-}
+const asignPriorityTag = (priorityLvl: number) => {
+	switch(priorityLvl){
+	case 4:
+		return "Low";
+	case 3:
+		return "Medium";
+	case 2:
+		return "High";
+	case 1:
+		return "Urgent";
+	default:
+		return 4;
+	}
+};
 
 export default function App(){
 
-  const badgesColors: BadgesColors = {
-    lowPriorityColor: "success",
-    mediumPriorityColor: "primary",
-    highPriorityColor: "warning",
-    urgentPriorityColor: "danger"
-  }  
+	const badgesColors: BadgesColors = {
+		lowPriorityColor: "success",
+		mediumPriorityColor: "primary",
+		highPriorityColor: "warning",
+		urgentPriorityColor: "danger"
+	};  
 
-  const baseItem: TodoItem = {  
-    title: "",
-    description: "",
-    completed: false,
-    priority: "Low",
-    weekday: "Monday",
-  }
+	const baseItem: TodoItem = {  
+		title: "",
+		description: "",
+		completed: false,
+		priority: 4, // 4 Represents Low value
+		weekday: "Monday",
+	};
 
-  const baseAppProps: AppProps = {
-    viewCompletedItems: false,
-    isModalActive: false,
-    dayToView: "Monday",
-    sortingOption: "Alphabetical"
-  }
+	const baseAppProps: AppProps = {
+		viewCompletedItems: false,
+		isModalActive: false,
+		dayToView: "Monday",
+		sortingOption: "title"
+	};
 
-  const [activeItem, setActiveItem] = useState(baseItem)
-  const [todoItemsList, setList] = useState<TodoItem[]>([])
-  const [appProps, setAppProps] = useState(baseAppProps)
+	const [activeItem, setActiveItem] = useState(baseItem);
+	const [todoItemsList, setList] = useState<TodoItem[]>([]);
+	const [appProps, setAppProps] = useState(baseAppProps);
 
 
-  useEffect(() => {
-    updateTodoItemsList(setList)
-  },[]);
+	useEffect(() => {
+		updateTodoItemsList(appProps, setList);
+	},[appProps]);
 
-  const toggle = () => {
-    const {viewCompletedItems, isModalActive, dayToView, sortingOption: sortingStyle} = appProps
-    setAppProps({ viewCompletedItems, isModalActive: !isModalActive, dayToView, sortingOption: sortingStyle});
-  };
+	const toggle = () => {
+		const {viewCompletedItems, isModalActive, dayToView, sortingOption: sortingStyle} = appProps;
+		setAppProps({ viewCompletedItems, isModalActive: !isModalActive, dayToView, sortingOption: sortingStyle});
+	};
 
-  const handleSubmit = async (todoItem: TodoItem) => {
-    toggle()
+	const handleSubmit = async (todoItem: TodoItem) => {
+		toggle();
 
-    if (todoItem.id) {
-      await axios.put(`/api/todos/${todoItem.id}/`, todoItem)
-    updateTodoItemsList(setList)
-      return;
-    }
-    await axios.post("/api/todos/", todoItem)
-    updateTodoItemsList(setList)
-  };
+		if (todoItem.id) {
+			await axios.put(`/api/todos/${todoItem.id}/`, todoItem);
+			updateTodoItemsList(appProps, setList);
+			return;
+		}
+		await axios.post("/api/todos/", todoItem);
+		updateTodoItemsList(appProps, setList);
+	};
 
-  const renderTabList = () => {
-    return (
-      <div>
-          <Nav tabs>
-              <NavItem
-                  onClick={() => {
-                    setAppProps(displaySpecificDay("Monday", appProps))
-                    updateTodoItemsList(setList)
-                  }}
-                  className={appProps.dayToView === "Monday" ? "nav-link active" : "nav-link"}
-                >
+	const renderTabList = () => {
+		return (
+			<div>
+				<Nav tabs>
+					<NavItem
+						onClick={() => {
+							setAppProps(displaySpecificDay("Monday", appProps));
+						}}
+						className={appProps.dayToView === "Monday" ? "nav-link active" : "nav-link"}
+					>
                   Monday
-              </NavItem>
-              <NavItem
-                  onClick={() => {
-                    setAppProps(displaySpecificDay("Tuesday", appProps))
-                    updateTodoItemsList(setList)
-                  }}
-                  className={appProps.dayToView === "Tuesday" ? "nav-link active" : "nav-link"}
-                >
+					</NavItem>
+					<NavItem
+						onClick={() => {
+							setAppProps(displaySpecificDay("Tuesday", appProps));
+						}}
+						className={appProps.dayToView === "Tuesday" ? "nav-link active" : "nav-link"}
+					>
                   Tuesday
-              </NavItem>
-              <NavItem
-                  onClick={() => {
-                    setAppProps(displaySpecificDay("Wednesday", appProps))
-                    updateTodoItemsList(setList)
-                  }}
-                  className={appProps.dayToView === "Wednesday" ? "nav-link active" : "nav-link"}
-                >
+					</NavItem>
+					<NavItem
+						onClick={() => {
+							setAppProps(displaySpecificDay("Wednesday", appProps));
+						}}
+						className={appProps.dayToView === "Wednesday" ? "nav-link active" : "nav-link"}
+					>
                   Wednesday
-              </NavItem>
-              <NavItem
-                  onClick={() => {
-                    setAppProps(displaySpecificDay("Thursday", appProps))
-                    updateTodoItemsList(setList)
-                  }}
-                  className={appProps.dayToView === "Thursday" ? "nav-link active" : "nav-link"}
-                >
+					</NavItem>
+					<NavItem
+						onClick={() => {
+							setAppProps(displaySpecificDay("Thursday", appProps));
+						}}
+						className={appProps.dayToView === "Thursday" ? "nav-link active" : "nav-link"}
+					>
                   Thursday
-              </NavItem>
-              <NavItem
-                  onClick={() => {
-                    setAppProps(displaySpecificDay("Friday", appProps))
-                    updateTodoItemsList(setList)
-                  }}
-                  className={appProps.dayToView === "Friday" ? "nav-link active" : "nav-link"}
-                >
+					</NavItem>
+					<NavItem
+						onClick={() => {
+							setAppProps(displaySpecificDay("Friday", appProps));
+						}}
+						className={appProps.dayToView === "Friday" ? "nav-link active" : "nav-link"}
+					>
                   Friday
-              </NavItem>
-              <NavItem
-                  onClick={() => {
-                    setAppProps(displaySpecificDay("Saturday", appProps))
-                    updateTodoItemsList(setList)
-                  }}
-                  className={appProps.dayToView === "Saturday" ? "nav-link active" : "nav-link"}
-                >
+					</NavItem>
+					<NavItem
+						onClick={() => {
+							setAppProps(displaySpecificDay("Saturday", appProps));
+						}}
+						className={appProps.dayToView === "Saturday" ? "nav-link active" : "nav-link"}
+					>
                   Saturday
-              </NavItem>
-              <NavItem
-                  onClick={() => {
-                    setAppProps(displaySpecificDay("Sunday", appProps))
-                    updateTodoItemsList(setList)
-                  }}
-                  className={appProps.dayToView === "Sunday" ? "nav-link active" : "nav-link"}
-                >
+					</NavItem>
+					<NavItem
+						onClick={() => {
+							setAppProps(displaySpecificDay("Sunday", appProps));
+						}}
+						className={appProps.dayToView === "Sunday" ? "nav-link active" : "nav-link"}
+					>
                   Sunday
-              </NavItem>
-          </Nav>
+					</NavItem>
+				</Nav>
 
-          <br></br>
+				<br></br>
           
-          <ButtonGroup  
-            size="sm"
-          >
-            <Button
-              outline color="success"
-              active={appProps.viewCompletedItems}
-              onClick={() => {
-                setAppProps(updateDisplayCompletedOption(true, appProps))
-                updateTodoItemsList(setList)
+				<ButtonGroup  
+					size="sm"
+				>
+					<Button
+						outline color="success"
+						active={appProps.viewCompletedItems}
+						onClick={() => {
+							setAppProps(updateDisplayCompletedOption(true, appProps));
                 
-              }}
-            >
+						}}
+					>
               Completed
-            </Button>
+					</Button>
 
-            <Button
-              outline color="danger"
-              active={!appProps.viewCompletedItems}
-              onClick={() => {
-                setAppProps(updateDisplayCompletedOption(false, appProps))
-                updateTodoItemsList(setList)
-              }}
-            >
+					<Button
+						outline color="danger"
+						active={!appProps.viewCompletedItems}
+						onClick={() => {
+							setAppProps(updateDisplayCompletedOption(false, appProps));
+						}}
+					>
               Incompleted
-            </Button>
-          </ButtonGroup>
+					</Button>
+				</ButtonGroup>
 
-          <UncontrolledButtonDropdown className="float-right" size="sm">
-                  <DropdownToggle  caret>
+				<UncontrolledButtonDropdown className="float-right" size="sm">
+					<DropdownToggle  caret>
                     Sort
-                  </DropdownToggle>
+					</DropdownToggle>
 
-                  <DropdownMenu>
+					<DropdownMenu>
 
-                    <DropdownItem onClick={() => {
-                          setAppProps(updateSortingOption("Alphabetically", appProps))
-                          updateTodoItemsList(setList)
-                        }
-                      }
-                    >
+						<DropdownItem onClick={() => {
+							setAppProps(updateSortingOption("title", appProps));
+						}
+						}
+						>
                       Alphabetically
-                    </DropdownItem>
+						</DropdownItem>
 
-                    <DropdownItem divider />
+						<DropdownItem divider />
 
-                    <DropdownItem onClick={() => {
-                          setAppProps(updateSortingOption("By priority", appProps))
-                          updateTodoItemsList(setList)
-                        }
-                      }
-                    >
+						<DropdownItem onClick={() => {
+							setAppProps(updateSortingOption("priority", appProps));
+						}
+						}
+						>
                       By priority
-                    </DropdownItem>
+						</DropdownItem>
 
-                  </DropdownMenu>
-            </UncontrolledButtonDropdown>
+					</DropdownMenu>
+				</UncontrolledButtonDropdown>
           
-      </div>
-    );
-  };
+			</div>
+		);
+	};
 
-  const renderTodoItems = () => {
-    const { viewCompletedItems, dayToView, sortingOption } = appProps;
+	const renderTodoItems = () => {
+		const newItems = todoItemsList;
 
-    const newItems = todoItemsList.filter(
-      (item: TodoItem) => {
-        return (item.completed === viewCompletedItems && item.weekday === dayToView)
-      }
-    );
-    
-    if( sortingOption === "Alphabetically" )
-      newItems.sort( (firstTodoItem, secondTodoItem) => firstTodoItem.title.toLowerCase().localeCompare(secondTodoItem.title.toLowerCase()))
-    else if (sortingOption === "By priority") 
-      newItems.sort( (firstTodoItem, secondTodoItem) => asignPriorityValue(firstTodoItem.priority) - asignPriorityValue(secondTodoItem.priority))
+		return newItems.map((todoItem: TodoItem) => (
+			<li
+				key={todoItem.id}
+				className="list-group-item d-flex justify-content-between align-items-center"
+			>
+				<span
+					className={`todo-title mr-2 ${
+						appProps.viewCompletedItems ? "completed-todo" : ""
+					}`}
+					title={todoItem.description}
+				>
+					{todoItem.title}   
 
-    return newItems.map((todoItem: TodoItem) => (
-      <li
-        key={todoItem.id}
-        className="list-group-item d-flex justify-content-between align-items-center"
-      >
-        <span
-          className={`todo-title mr-2 ${
-            appProps.viewCompletedItems ? "completed-todo" : ""
-          }`}
-          title={todoItem.description}
-        >
-          {todoItem.title}   
-
-          <br></br>
+					<br></br>
           
-          <span>
-              <Badge color={ String( asignBadgeColor(todoItem.priority, badgesColors) )}>
-                {todoItem.priority}
-              </Badge>
-          </span>
-        </span>
+					<span>
+						<Badge color={ String( asignBadgeColor(todoItem.priority, badgesColors) )}>
+							{asignPriorityTag(todoItem.priority)}
+						</Badge>
+					</span>
+				</span>
 
-        <span>
-          <button
-            className="btn btn-secondary mr-2"
-            onClick={() => {
-              setAppProps(modalToggling(appProps))
-              setActiveItem(todoItem)
-              }
-            }
-          >
+				<span>
+					<button
+						className="btn btn-secondary mr-2"
+						onClick={() => {
+							setAppProps(modalToggling(appProps));
+							setActiveItem(todoItem);
+						}
+						}
+					>
             Edit
-          </button>
-          <button
-            className="btn btn-danger"
-            onClick={
-              () => handleDelete(todoItem, setList) 
-            }
-          >
+					</button>
+					<button
+						className="btn btn-danger"
+						onClick={
+							() => handleDelete(todoItem, appProps, setList)
+						}
+					>
             Delete
-          </button>
-        </span>
-      </li>
-    ));
-  };
+					</button>
+				</span>
+			</li>
+		));
+	};
 
-  return (
-    <main className="container">
-      <h1 className="text-white text-uppercase text-center my-4">Todo app</h1>
-      <div className="row">
-        <div className="col-md-8 col-sm-10 mx-auto p-0">
-          <div className="card p-3">
-            <div className="mb-4">
-              <button
-                className="btn btn-primary"
-                onClick={ () => {
-                    setAppProps(modalToggling(appProps))
-                    setActiveItem(createItem)
-                  }
-                }
-              >
+	return (
+		<main className="container">
+			<h1 className="text-white text-uppercase text-center my-4">Todo app</h1>
+			<div className="row">
+				<div className="col-md-8 col-sm-10 mx-auto p-0">
+					<div className="card p-3">
+						<div className="mb-4">
+							<button
+								className="btn btn-primary"
+								onClick={ () => {
+									setAppProps(modalToggling(appProps));
+									setActiveItem(createItem);
+								}
+								}
+							>
                 Add task
-              </button>
-            </div>
-            {renderTabList()}
+							</button>
+						</div>
+						{renderTabList()}
 
-            <ul className="list-group list-group-flush border-top-0">
-              {renderTodoItems()}
-            </ul>
-          </div>
-        </div>
-      </div>
-      {appProps.isModalActive ? ( 
-          <Modal
-            activeItem={activeItem}
-            toggle={toggle}
-            onSave={handleSubmit}
-          />
-      ) : null}
-    </main>
-  );
+						<ul className="list-group list-group-flush border-top-0">
+							{renderTodoItems()}
+						</ul>
+					</div>
+				</div>
+			</div>
+			{appProps.isModalActive ? ( 
+				<Modal
+					activeItem={activeItem}
+					toggle={toggle}
+					onSave={handleSubmit}
+				/>
+			) : null}
+		</main>
+	);
 }

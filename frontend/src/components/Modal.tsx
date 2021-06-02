@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
-  Button,
-  Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Form,
-  FormGroup,
-  Input,
-  Label,
+	Button,
+	Modal,
+	ModalHeader,
+	ModalBody,
+	ModalFooter,
+	Form,
+	FormGroup,
+	Input,
+	Label,
 } from "reactstrap";
 
 interface TodoItem{
@@ -16,7 +16,7 @@ interface TodoItem{
   title: string,
   description: string,
   completed: boolean,
-  priority: string,
+  priority: number,
   weekday: string,
 }
 
@@ -26,131 +26,146 @@ interface CustomModalProps{
   onSave: (item: TodoItem) => void,
 }
 
-const markAsCompleted = (completed: boolean, todo: TodoItem) => ({...todo, completed})
+const markAsCompleted = (completed: boolean, todo: TodoItem) => ({...todo, completed});
 
-const updateTitle = (title: string, todo: TodoItem) => ({...todo, title})
+const updateTitle = (title: string, todo: TodoItem) => ({...todo, title});
 
-const updateDescription = (description: string, todo: TodoItem) => ({...todo, description})
+const updateDescription = (description: string, todo: TodoItem) => ({...todo, description});
 
-const updatePriorityLvl = (priority: string, todo: TodoItem) => ({...todo, priority})
+const updatePriorityLvl = (priority: number, todo: TodoItem) => ({...todo, priority});
 
-const updateWeekday = (weekday: string, todo: TodoItem) => ({...todo, weekday})
+const updateWeekday = (weekday: string, todo: TodoItem) => ({...todo, weekday});
+
+const asignPriorityLvl = (selectValue: string) => {
+	switch(selectValue){
+	case "Low":
+		return 4;
+	case "Medium":
+		return 3;
+	case "High":
+		return 2;
+	case "Urgent":
+		return 1;
+	default:
+		return 4;
+	}
+};
 
 export default function CustomModal(props: CustomModalProps) {
-  const {toggle, onSave, activeItem} = props
-  const [todo, setTodoValues] = useState(activeItem)
+	const {toggle, onSave, activeItem} = props;
+	const [todo, setTodoValues] = useState(activeItem);
 
-  return (
-    <Modal isOpen={true} toggle={toggle}>
-      <ModalHeader toggle={toggle}>Todo Item</ModalHeader>
+	return (
+		<Modal isOpen={true} toggle={toggle}>
+			<ModalHeader toggle={toggle}>Todo Item</ModalHeader>
 
-      <ModalBody>
-        <Form>
+			<ModalBody>
+				<Form>
 
-          <FormGroup>
-            <Label for="todo-title">Title</Label>
-            <Input
-              type="text"
-              id="todo-title"
-              name="title"
-              value={todo.title}
-              onChange={ (event) => {
-                const {target: {value}} = event
-                const updatedTodo = updateTitle(value, todo)
-                setTodoValues(updatedTodo)
-              }}
-              placeholder="Enter Todo Title"
-            />
-          </FormGroup>
+					<FormGroup>
+						<Label for="todo-title">Title</Label>
+						<Input
+							type="text"
+							id="todo-title"
+							name="title"
+							value={todo.title}
+							onChange={ (event) => {
+								const {target: {value}} = event;
+								const updatedTodo = updateTitle(value, todo);
+								setTodoValues(updatedTodo);
+							}}
+							placeholder="Enter Todo Title"
+						/>
+					</FormGroup>
 
-          <FormGroup>
-            <Label for="todo-description">Description</Label>
-            <Input
-              type="text"
-              id="todo-description"
-              name="description"
-              value={todo.description}
-              onChange={ (event) => {
-                const {target: {value}} = event
-                const updatedTodo = updateDescription(value, todo)
-                setTodoValues(updatedTodo)
-              }}
-              placeholder="Enter Todo description"
-            />
-          </FormGroup>
+					<FormGroup>
+						<Label for="todo-description">Description</Label>
+						<Input
+							type="text"
+							id="todo-description"
+							name="description"
+							value={todo.description}
+							onChange={ (event) => {
+								const {target: {value}} = event;
+								const updatedTodo = updateDescription(value, todo);
+								setTodoValues(updatedTodo);
+							}}
+							placeholder="Enter Todo description"
+						/>
+					</FormGroup>
 
-          <FormGroup>
-            <Label for="todo-priority">Select priority level</Label>
-            <Input 
-              type="select" 
-              id="todo-priority"
-              name="priority" 
-              value= {todo.priority}
-              onChange={ (event) => {
-                const {target: {value}} = event
-                const updatedTodo = updatePriorityLvl(value, todo)
-                setTodoValues(updatedTodo)
-              }}
-              >
-              <option>Low</option>
-              <option>Medium</option>
-              <option>High</option>
-              <option>Urgent</option>
-            </Input>
-          </FormGroup>
+					<FormGroup>
+						<Label for="todo-priority">Select priority level</Label>
+						<Input 
+							type="select" 
+							id="todo-priority"
+							name="priority" 
+							value= {todo.priority}
+							onChange={ (event) => {
+								const {target: {value}} = event;
+								const updatedTodo = updatePriorityLvl(asignPriorityLvl(value), todo);
+								setTodoValues(updatedTodo);
+							}}
+						>
+							<option>Low</option>
+							<option>Medium</option>
+							<option>High</option>
+							<option>Urgent</option>
+						</Input>
+					</FormGroup>
 
-          <FormGroup>
-            <Label for="todo-weekday">Select the day of the week</Label>
-            <Input 
-              type="select" 
-              id="todo-weekday"
-              name="weekday" 
-              value= {todo.weekday}
-              onChange={ (event) => {
-                const {target: {value}} = event
+					<FormGroup>
+						<Label for="todo-weekday">Select the day of the week</Label>
+						<Input 
+							type="select" 
+							id="todo-weekday"
+							name="weekday" 
+							value= {todo.weekday}
+							onChange={ (event) => {
+								const {target: {value}} = event;
 
-                const updatedTodo = updateWeekday(value, todo)
-                setTodoValues(updatedTodo)
-              }}
-              >
-                <option>Monday</option>
-                <option>Tuesday</option>
-                <option>Wednesday</option>
-                <option>Thursday</option>
-                <option>Friday</option>
-                <option>Saturday</option>
-                <option>Sunday</option>            
-              </Input>
-          </FormGroup>
+								const updatedTodo = updateWeekday(value, todo);
+								setTodoValues(updatedTodo);
+							}}
+						>
+							<option>Monday</option>
+							<option>Tuesday</option>
+							<option>Wednesday</option>
+							<option>Thursday</option>
+							<option>Friday</option>
+							<option>Saturday</option>
+							<option>Sunday</option>            
+						</Input>
+					</FormGroup>
 
-          <FormGroup check>
-            <Label check>
-              <Input
-                type="checkbox"
-                name="completed"
-                checked={todo.completed}
-                onChange={ (event) => {
-                  const {target: {checked}} = event
-                  const updatedTodo = markAsCompleted(checked, todo)
-                  setTodoValues(updatedTodo)
-                }}
-                />
+					<FormGroup check>
+						<Label check>
+							<Input
+								type="checkbox"
+								name="completed"
+								checked={todo.completed}
+								onChange={ (event) => {
+									const {target: {checked}} = event;
+									const updatedTodo = markAsCompleted(checked, todo);
+									setTodoValues(updatedTodo);
+								}}
+							/>
               Completed
-            </Label>
-          </FormGroup>
+						</Label>
+					</FormGroup>
 
-        </Form>
-      </ModalBody>
+				</Form>
+			</ModalBody>
 
-      <ModalFooter>
-        <Button
-          color="success"
-          onClick={() => onSave(todo)}
-        >
+			<ModalFooter>
+				<Button
+					color="success"
+					onClick={() => onSave(todo)}
+				>
           Save
-        </Button>
-      </ModalFooter>
+				</Button>
+			</ModalFooter>
       
-    </Modal>
-  );
+		</Modal>
+	);
 }

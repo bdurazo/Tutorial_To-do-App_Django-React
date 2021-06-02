@@ -5,11 +5,11 @@ from django.db.models.enums import Choices
 
 class Todo(models.Model):
 
-    class Priority(models.TextChoices):
-        LOW = 'Low'
-        MEDIUM = 'Medium'
-        HIGH = 'High'
-        URGENT = 'Urgent'
+    class Priority(models.IntegerChoices):
+        LOW = 4
+        MEDIUM = 3
+        HIGH = 2
+        URGENT = 1
 
     class Weekdays(models.TextChoices):
         MONDAY = 'Monday'
@@ -23,7 +23,7 @@ class Todo(models.Model):
     title = models.CharField(max_length=120)
     description = models.TextField()
     completed = models.BooleanField(default=False)
-    priority = models.CharField(max_length=10, choices=Priority.choices, default=Priority.LOW)
+    priority = models.IntegerField(choices=Priority.choices, default=Priority.LOW)
     weekday = models.CharField(max_length=10, choices=Weekdays.choices, default=Weekdays.MONDAY)
 
     def _str_(self):
