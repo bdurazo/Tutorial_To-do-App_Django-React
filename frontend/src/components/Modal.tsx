@@ -11,6 +11,7 @@ import {
 	Label,
 } from "reactstrap";
 
+
 interface TodoItem{
   id?: number,
   title: string,
@@ -36,22 +37,8 @@ const updatePriorityLvl = (priority: number, todo: TodoItem) => ({...todo, prior
 
 const updateWeekday = (weekday: string, todo: TodoItem) => ({...todo, weekday});
 
-const asignPriorityLvl = (selectValue: string) => {
-	switch(selectValue){
-	case "Low":
-		return 4;
-	case "Medium":
-		return 3;
-	case "High":
-		return 2;
-	case "Urgent":
-		return 1;
-	default:
-		return 4;
-	}
-};
-
-export default function CustomModal(props: CustomModalProps) {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+const CustomModal = (props: CustomModalProps) => {
 	const {toggle, onSave, activeItem} = props;
 	const [todo, setTodoValues] = useState(activeItem);
 
@@ -100,17 +87,18 @@ export default function CustomModal(props: CustomModalProps) {
 							type="select" 
 							id="todo-priority"
 							name="priority" 
-							value= {todo.priority}
+							value= { todo.priority }
 							onChange={ (event) => {
 								const {target: {value}} = event;
-								const updatedTodo = updatePriorityLvl(asignPriorityLvl(value), todo);
+								const updatedTodo = updatePriorityLvl(Number( value ), todo);
+								console.log(updatedTodo);
 								setTodoValues(updatedTodo);
 							}}
 						>
-							<option>Low</option>
-							<option>Medium</option>
-							<option>High</option>
-							<option>Urgent</option>
+							<option value={4}>Low</option>
+							<option value={3}>Medium</option>
+							<option value={2}>High</option>
+							<option value={1}>Urgent</option>
 						</Input>
 					</FormGroup>
 
@@ -168,4 +156,6 @@ export default function CustomModal(props: CustomModalProps) {
       
 		</Modal>
 	);
-}
+};
+
+export default CustomModal;

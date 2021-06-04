@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from .serializers import TodoSerializer
 from .orderingFilter import CaseInsensitiveOrderingFilter
+from .pagination import StandardResultsSetPagination
 from .models import Todo
 
 # Create your views here.
@@ -11,6 +12,7 @@ class TodoView(viewsets.ModelViewSet):
     serializer_class = TodoSerializer
     filter_backends = [CaseInsensitiveOrderingFilter]
     ordering_fields = ['priority', 'title']
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         """
