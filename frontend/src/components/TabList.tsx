@@ -4,6 +4,7 @@ import {
 	NavItem,
 } from "reactstrap";
 
+
 interface TabListProps {
     setWeekDay: (weekDay: string) => void,
     stateWeekDay: string
@@ -13,57 +14,22 @@ interface TabListProps {
 const TabList = (props: TabListProps) => {
 	const {setWeekDay, stateWeekDay} = props;
 
+	const WEEKDAYS = [ "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+	
+	//Add map function
 	return(
 		<Nav tabs>
-            
-			<NavItem
-				onClick={ () => setWeekDay("Monday") }
-				className={ stateWeekDay === "Monday" ? "nav-link active" : "nav-link" }
-			>
-                Monday
-			</NavItem>
+			{ WEEKDAYS.map((weekday: string, i) => (
+				<NavItem
+					key={i}
+					onClick={ () => setWeekDay(WEEKDAYS[i]) }
+					className={ stateWeekDay === WEEKDAYS[i] ? "nav-link active" : "nav-link" }
+				>
+					{WEEKDAYS[i]}
+				</NavItem>
 
-			<NavItem
-				onClick={ () => setWeekDay("Tuesday") }
-				className={ stateWeekDay === "Tuesday" ? "nav-link active" : "nav-link" }
-			>
-                Tuesday
-			</NavItem>
-
-			<NavItem
-				onClick={ () => setWeekDay("Wednesday") }
-				className={ stateWeekDay === "Wednesday" ? "nav-link active" : "nav-link" }
-			>
-                Wednesday
-			</NavItem>
-
-			<NavItem
-				onClick={ () => setWeekDay("Thursday") }
-				className={ stateWeekDay === "Thursday" ? "nav-link active" : "nav-link" }
-			>
-                Thursday
-			</NavItem>
-
-			<NavItem
-				onClick={ () => setWeekDay("Friday") }
-				className={ stateWeekDay === "Friday" ? "nav-link active" : "nav-link" }
-			>
-                Friday
-			</NavItem>
-
-			<NavItem
-				onClick={ () => setWeekDay("Saturday") }
-				className={ stateWeekDay === "Saturday" ? "nav-link active" : "nav-link" }
-			>
-                Saturday
-			</NavItem>
-
-			<NavItem
-				onClick={ () => setWeekDay("Sunday") }
-				className={ stateWeekDay === "Sunday" ? "nav-link active" : "nav-link" }
-			>
-                Sunday
-			</NavItem>
+			)
+			)}
 
 		</Nav>
 	);
